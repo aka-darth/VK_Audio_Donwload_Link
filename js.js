@@ -12,7 +12,7 @@
 			info:" .title_wrap.fl_l"
 		}
 		var styles={
-			right:"50px",
+			right:"30px",
 			zIndex:"100",	
 			position:"absolute"
 		}
@@ -21,7 +21,7 @@
 				//Check search string changes..
 				var newquery=document.getElementById("s_search")?document.getElementById("s_search").value:'';
 				if(me.query!=newquery){
-					console.log('Changed',me.query,'=>',newquery);
+					//console.log('Changed',me.query,'=>',newquery);
 					me.audios=0;
 					me.query=newquery;
 				}
@@ -29,12 +29,6 @@
 				styles.zIndex=500;
 				styles.marginTop="10px";
 				styles.right="60px";
-			case "im":
-				styles.right="30px";
-			break;
-			case "id":
-			case "club":
-			case "feed":
 			break;
 			default:
 				//console.log('unknown path',path);
@@ -57,7 +51,7 @@
 			//console.log(num);
 			var selector="#audio"+num+selectors.info;
 			var infos=document.querySelector(selector);
-			//console.log(selector,infos);
+			//console.log(selector,!!infos);
 			if(!infos.querySelector('#download_link-'+num)){
 				var a=document.createElement('a');
 				for(var style in styles)a.style[style]=styles[style];
@@ -68,8 +62,7 @@
 				a.href=downloadlink;
 				a.id="download_link-"+num;
 				//console.log(a);
-
-				var artist=(infos.querySelector('b a span')||infos.querySelector('b a')).innerHTML;
+				var artist=infos.querySelector('b a').innerText;
 				var title=(infos.querySelector('.title a')||infos.querySelector('.title')).innerHTML;;
 				var trackname=a.trackname=artist+" - "+title;
 				//console.log(trackname);
@@ -92,6 +85,5 @@
 		return true;
 	}
 	//console.info('[VK audio download]Ready.');
-	window.VKAudioDownload=me;
 	return me;
 })();
