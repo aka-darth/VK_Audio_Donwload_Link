@@ -1,7 +1,7 @@
 ﻿{
- "name": "VK audio download by Darth",
+ "name": "VK audio extension by Darth",
 	"manifest_version": 2,
-	"version": "2.1.31",
+	"version": "3.0.31",
 	"description": "Плагин добавляет кнопки скачать к аудиозаписям вконтакте",
 	"permissions":
 	[

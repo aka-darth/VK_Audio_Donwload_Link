@@ -1,4 +1,5 @@
 ﻿(function () {
+    const DEBUG = false;
     const AudioUtils = {
         AUDIO_ITEM_INDEX_ID: 0,
         AUDIO_ITEM_INDEX_OWNER_ID: 1,
@@ -138,6 +139,7 @@
         height: "18px",
         float: "right",
         display: "inline-block",
+        margin: "7px",
         backgroundSize: "cover"
     }
 
@@ -149,14 +151,14 @@
         realUrls: {},
         selector: '._audio_row',
         search: '#audio_search',
-        loader(){
-            if(queue.length){
-
-            }
-        },
         loadUrl(audio){
             if(me.realUrls[audio.fullId]){
-                console.log('D', audio);
+                if(me.queue.length) me.loadUrl(me.queue.shift());
+                return;
+            }
+            if(audio.isClaimed){
+                if(DEBUG) console.log('shit', audio);
+                if(me.queue.length) me.loadUrl(me.queue.shift());
                 return;
             }
             if(me.loading){
@@ -179,8 +181,8 @@
                         me.link(audio);
                         me.button(audio);
                     }catch(e){
-                        console.log(audio, http.responseText);
-                        console.error(e);
+                        if(DEBUG) console.log(audio, http.responseText);
+                        if(DEBUG) console.error(e);
                     }
                     me.loading = false;
                     if(me.queue.length) setTimeout(()=> me.loadUrl(me.queue.shift()), 444);
@@ -195,30 +197,30 @@
             me.realUrls[audio.fullId] = unmask(audio.url);
         },
         worker(audio_rows) {
-            console.log('[Vk Audio Download]Worker running..');
+            // console.log('[Vk Audio Download]Worker running..');
             const nourl = [];
             for (const row of audio_rows) {
                 const audio = AudioUtils.asObject(AudioUtils.getAudioFromEl(row));
                 if(me.realUrls[audio.fullId]){
-                    console.log(1);
                 }else if(audio.url){
-                    console.log(2);
+                    if(DEBUG) console.log(2);
                     me.button(audio, row);
                 }else{
-                    console.log(3);
+                    if(DEBUG) console.log(3);
                     nourl.push(audio);
                 }
             }
             nourl.forEach(a => me.loadUrl(a));
-            console.log(nourl.length, audio_rows.length);
+            if(DEBUG) console.log(nourl.length, audio_rows.length);
             return true;
         },
         button(audio){
             if(document.getElementById("download_link-" + audio.fullId)) return;
             const el = me.getAudioEl(audio);
             if(!el){
-                console.log(`${me.selector}_${audio.owner_id}_${audio.id}`);
-                throw 'no el';
+                if(DEBUG) console.log(`${me.selector}_${audio.owner_id}_${audio.id}`);
+                if(DEBUG) throw 'no el';
+                return;
             }
             const realUrl = unmask(audio.url);
             // const tmpl = `<button class="uppa" aria-label="Послать страждущему" class="audio_row__action">S</button><button class="duppa" aria-label="Послать страждущему" class="audio_row__action">D</button>`;
@@ -244,33 +246,19 @@
 
             const a2 = document.createElement('a');
             for (var style in styles) a2.style[style] = styles[style];
-            a.style.backgroundImage = "url("+sendB+")";
+            a2.style.backgroundImage = "url("+sendB+")";
             el.querySelector('.audio_row__title').appendChild(a2);
             a2.onclick = e => me.telegram(audio);
         },
         telegram(audio){
-            const http = new XMLHttpRequest();
-            const params = {link: me.realUrls[audio.fullId]};
-            http.open("POST", "http://shcoding.ru/", true);
-            http.withCredentials = true;
-            http.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            http.onreadystatechange = () => {
-                if(http.readyState === 4 && http.status === 200) {
-                    try{
-                        let audio = JSON.parse(http.responseText.match(/\[.*\]/)[0])[0];
-                        audio = AudioUtils.asObject(audio);
-                        me.link(audio);
-                        me.button(audio);
-                    }catch(e){
-                        console.log(http.responseText);
-                        console.error(e);
-                    }
-                    me.loading = false;
-                    if(me.queue.length) setTimeout(()=> me.loadUrl(me.queue.shift()), 444);
+            var http = new XMLHttpRequest();
+            http.open("GET", 'https://api.telegram.org/bot389888017:AAHiJ_A76myOqVaCrmFs6CLqpjI0lzGvsQc/sendAudio?chat_id=388062872&audio=' + encodeURI(me.realUrls[audio.fullId]));
+            http.onreadystatechange = function() {
+                if(http.readyState == 4 && http.status == 200) {
+                    if(DEBUG) console.log(http.responseText);
                 }
             }
-            http.send(Object.keys(params).map(param => `${param}=${params[param]}`).join('&'));
-
+            http.send();
         }
 //	 	query:document.getElementById("s_search")?document.getElementById("s_search").value:''
     };
