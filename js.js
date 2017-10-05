@@ -1,3 +1,14 @@
+let paused;
+let telegram;
+chrome.storage.local.get(state => {
+	paused = state.paused;
+});
+chrome.runtime.onMessage.addListener((request,sender,callback) => {
+	paused = request.paused;
+});
+
+
+
 ﻿(function () {
     const DEBUG = false;
     const AudioUtils = {
@@ -185,7 +196,7 @@
                         if(DEBUG) console.error(e);
                     }
                     me.loading = false;
-                    if(me.queue.length) setTimeout(()=> me.loadUrl(me.queue.shift()), 444);
+                    if(me.queue.length && !paused) setTimeout(()=> me.loadUrl(me.queue.shift()), 444);
                 }
             }
             http.send(Object.keys(params).map(param => `${param}=${params[param]}`).join('&'));
@@ -252,7 +263,7 @@
         },
         telegram(audio){
             var http = new XMLHttpRequest();
-            http.open("GET", 'https://api.telegram.org/bot389888017:AAHiJ_A76myOqVaCrmFs6CLqpjI0lzGvsQc/sendAudio?chat_id=388062872&audio=' + encodeURI(me.realUrls[audio.fullId]));
+            http.open("GET", 'https://shcoding.ru/track?url=' + encodeURI(me.realUrls[audio.fullId]));
             http.onreadystatechange = function() {
                 if(http.readyState == 4 && http.status == 200) {
                     if(DEBUG) console.log(http.responseText);
@@ -287,12 +298,12 @@
                 // } else {
                 //     // console.log('Not changed.');
                 // }
-                me.worker(document.querySelectorAll(me.selector));
+                if(!paused) me.worker(document.querySelectorAll(me.selector));
                 break;
             default:
                 console.log('unknown path', path);
         }
     }, 1987);
-    console.info('[VK audio download]Ready.');
+    console.info('[VK audio download] Ready.');
     return me;
 })();
