@@ -1,11 +1,12 @@
-let paused, telegram;
-const button = document.getElementById('button1');
+let paused, telegram, download;
+const toggler = document.getElementById('toggler');
+const downloadAll = document.getElementById('downloadAll');
 
 const handleState = state => {
 	if(paused){
-		button.innerHTML = 'Run';
+		toggler.innerHTML = 'Run';
 	}else{
-		button.innerHTML = 'Stop';			
+		toggler.innerHTML = 'Stop';			
 	}	
 }
 
@@ -17,9 +18,11 @@ const toggleState = event => {
 	handleState();
 }
 
+
 chrome.storage.local.get(state => {
 	paused = state.paused;
 	handleState();
 });
 
-button.onclick = toggleState;
+toggler.onclick = toggleState;
+downloadAll.onclick = event => chrome.tabs.query({active: true, currentWindow: true}, tabs => chrome.tabs.sendMessage(tabs[0].id, {download: true}));
