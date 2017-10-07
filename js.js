@@ -18,7 +18,7 @@ chrome.runtime.onMessage.addListener((data,sender,callback) => {
 
 
 ﻿(function () {
-    const DEBUG = false;
+    const DEBUG = true;
 
     const AudioUtils = {
         AUDIO_ITEM_INDEX_ID: 0,
@@ -272,6 +272,16 @@ chrome.runtime.onMessage.addListener((data,sender,callback) => {
                 return true;
             }
 
+			const xhr = new XMLHttpRequest();
+			xhr.open('GET', realUrl, true);
+			xhr.responseType = 'blob';
+			xhr.onload = () => {
+				const file = new Blob([xhr.response], { type : 'application/octet-stream' });
+				a.href = window.URL.createObjectURL(file);
+			};
+			xhr.onerror = (...args) => console.error(args);
+			xhr.send();			
+			
             const a2 = document.createElement('a');
             for (var style in styles) a2.style[style] = styles[style];
             a2.style.backgroundImage = "url("+sendB+")";
