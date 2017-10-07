@@ -1,16 +1,25 @@
 let paused;
 let telegram;
+let me;
 chrome.storage.local.get(state => {
 	paused = state.paused;
 });
-chrome.runtime.onMessage.addListener((request,sender,callback) => {
-	paused = request.paused;
+
+chrome.runtime.onMessage.addListener((data,sender,callback) => {
+	if(data.download){
+		me.downloadAll();
+	}else{
+		paused = data.paused;
+	}
 });
+
+
 
 
 
 ﻿(function () {
     const DEBUG = false;
+
     const AudioUtils = {
         AUDIO_ITEM_INDEX_ID: 0,
         AUDIO_ITEM_INDEX_OWNER_ID: 1,
@@ -140,7 +149,10 @@ chrome.runtime.onMessage.addListener((request,sender,callback) => {
         }
         return t
     }
-
+	
+	
+	
+	
 
 
     const downloadB = 'data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDI2IDI2IiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCAyNiAyNiIgd2lkdGg9IjI0cHgiIGhlaWdodD0iMjRweCI+CiAgPGc+CiAgICA8cGF0aCBkPSJtMjUsMTdoLTJjLTAuNiwwLTEsMC40LTEsMXYyLjVjMCwwLjMtMC4yLDAuNS0wLjUsMC41aC0xN2MtMC4zLDAtMC41LTAuMi0wLjUtMC41di0yLjVjMC0wLjYtMC40LTEtMS0xaC0yYy0wLjYsMC0xLDAuNC0xLDF2NmMwLDAuNiAwLjQsMSAxLDFoMjRjMC42LDAgMS0wLjQgMS0xdi02YzAtMC42LTAuNC0xLTEtMXoiIGZpbGw9IiNmZjg4MDAiLz4KICAgIDxwYXRoIGQ9Im0xMi4zLDE2LjdjMC4yLDAuMiAwLjUsMC4zIDAuNywwLjNzMC41LTAuMSAwLjctMC4zbDYtNmMwLjItMC4yIDAuMy0wLjQgMC4zLTAuN3MtMC4xLTAuNS0wLjMtMC43bC0xLjQtMS40Yy0wLjItMC4yLTAuNC0wLjMtMC43LTAuMy0wLjMsMC0wLjUsMC4xLTAuNywwLjNsLTEsMWMtMC4zLDAuMy0wLjksMC4xLTAuOS0wLjR2LTYuNWMwLTAuNi0wLjQtMS0xLTFoLTJjLTAuNiwwLTEsMC40LTEsMXY2LjZjMCwwLjQtMC41LDAuNy0wLjksMC40bC0xLTFjLTAuMi0wLjItMC40LTAuMy0wLjctMC4zLTAuMywwLTAuNSwwLjEtMC43LDAuM2wtMS40LDEuNGMtMC4yLDAuMi0wLjMsMC40LTAuMywwLjdzMC4xLDAuNSAwLjMsMC43bDYsNS45eiIgZmlsbD0iI2ZmODgwMCIvPgogIDwvZz4KPC9zdmc+Cg==';
@@ -155,13 +167,23 @@ chrome.runtime.onMessage.addListener((request,sender,callback) => {
     }
 
 
-    const me = {
+    me = {
         audios: 0,
         loading: false,
         queue: [],
         realUrls: {},
         selector: '._audio_row',
         search: '#audio_search',
+		downloadAll(){
+			const buttons = [...document.querySelectorAll('.VK_audio_download_links')];
+			for(const button of buttons){
+				button.dispatchEvent(new MouseEvent('click', {
+					'view': window,
+					'bubbles': true,
+					'cancelable': true
+				}));							
+			}
+		},
         loadUrl(audio){
             if(me.realUrls[audio.fullId]){
                 if(me.queue.length) me.loadUrl(me.queue.shift());
@@ -234,26 +256,21 @@ chrome.runtime.onMessage.addListener((request,sender,callback) => {
                 return;
             }
             const realUrl = unmask(audio.url);
-            // const tmpl = `<button class="uppa" aria-label="Послать страждущему" class="audio_row__action">S</button><button class="duppa" aria-label="Послать страждущему" class="audio_row__action">D</button>`;
-
             const a = document.createElement('a');
             for (var style in styles)a.style[style] = styles[style];
-            // a.appendChild(document.createTextNode(' Скачать '));
             a.style.backgroundImage = "url("+downloadB+")";
             a.href = realUrl;
             a.id = "download_link-" + audio.fullId;
+            a.classList.add('VK_audio_download_links');
             const trackname = a.trackname = audio.performer + " - " + audio.title;
             a.title = trackname+'.mp3';
             a.download = trackname+'.mp3';
             el.querySelector('.audio_row__title').appendChild(a);
-            a.onclick = e => {
-                e.stopPropagation();
-            };
+            a.onclick = e => e.stopPropagation();
             a.oncontextmenu = () => {
                 prompt("Ctrl+C", trackname);
                 return true;
             }
-
 
             const a2 = document.createElement('a');
             for (var style in styles) a2.style[style] = styles[style];
