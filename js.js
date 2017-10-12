@@ -306,6 +306,9 @@ chrome.runtime.onMessage.addListener((data,sender,callback) => {
         path = /\/([\D]*)[\d]*/.exec(window.location.pathname)[1];
         switch (path) {
             case "audios":
+            case "audios-":
+            case "im":
+            case "feed":
                 //Check search string changes..
                 // var newquery=document.getElementById("s_search")?document.getElementById("s_search").value:'';
                 // if(me.query!=newquery){
